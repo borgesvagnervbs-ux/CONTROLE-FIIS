@@ -149,13 +149,10 @@ def coletar_fii(ticker, tipo):
                 erros.append(f"{url}: página não é do {ticker}")
                 continue
             d = extrair_statusinvest(txt) if fonte == "statusinvest" else extrair_investidor10(txt)
-            if d.get("cotacao") and d["cotacao"] > 0:
-                # dividendo absurdo (maior que a cota) é erro de leitura
-                if d.get("dividendo") and d["dividendo"] >= d["cotacao"]:
-                    d["dividendo"] = None
+            if any(d.get(k) for k in ("cotacao", "dividendo", "dy12m", "pvp")):
                 d["fonte"] = url
                 return d, None
-            erros.append(f"{url}: cotação não encontrada")
+            erros.append(f"{url}: indicadores não encontrados")
         except Exception as e:  # noqa: BLE001
             erros.append(str(e)[:200])
         time.sleep(1.5)
@@ -192,6 +189,40 @@ def coletar_ranking():
     return lista
 
 
+def faixa(v, minimo, maximo):
+    return v if isinstance(v, (int, float)) and minimo <= v <= maximo else None
+
+
+def combinar(tk, pagina, rk, anterior):
+    """Junta a página do fundo (Status Invest/Investidor10) com a linha do ranking do
+    Fundamentus. Cotação, P/VP e liquidez vêm do ranking, que é uma tabela simples e
+    confiável; dividendo e DY vêm da página do fundo (o Fundamentus não traz o DY dos
+    Fiagros). Todo valor passa por uma checagem de faixa para descartar leituras erradas."""
+    pagina = pagina or {}
+    rk = rk or {}
+    anterior = anterior or {}
+    d = {}
+    d["cotacao"] = faixa(rk.get("cotacao"), 0.5, 5000) or faixa(pagina.get("cotacao"), 0.5, 5000)
+    cot = d["cotacao"]
+    d["pvp"] = faixa(rk.get("pvp"), 0.1, 5) or faixa(pagina.get("pvp"), 0.1, 5)
+    d["liquidez"] = faixa(rk.get("liquidez"), 0, 1e10) if rk.get("liquidez") else faixa(pagina.get("liquidez"), 0, 1e10)
+    d["dy12m"] = faixa(pagina.get("dy12m"), 0.5, 40) or faixa(rk.get("dy12m"), 0.5, 40)
+    div = pagina.get("dividendo")
+    if cot and div and not (0.002 <= div / cot <= 0.04):  # rendimento mensal entre 0,2% e 4%
+        div = None
+    if not div and anterior.get("dividendo") and cot and 0.002 <= anterior["dividendo"] / cot <= 0.04:
+        div = anterior["dividendo"]
+    d["dividendo"] = div
+    d["vpCota"] = faixa(pagina.get("vpCota"), 0.5, 5000) or (round(cot / d["pvp"], 2) if cot and d["pvp"] else None)
+    vac = rk.get("vacancia") if rk else None
+    d["vacancia"] = faixa(pagina.get("vacancia"), 0, 100) if pagina.get("vacancia") else faixa(vac, 0, 100)
+    d["cotistas"] = pagina.get("cotistas")
+    d["segmento"] = rk.get("segmento") or None
+    fontes = [x for x in (pagina.get("fonte"), "https://www.fundamentus.com.br/fii_resultado.php" if rk else None) if x]
+    d["fonte"] = " + ".join(fontes) if fontes else None
+    return d
+
+
 def main():
     with open(ARQ_TICKERS, encoding="utf-8") as f:
         tickers = json.load(f)
@@ -205,25 +236,6 @@ def main():
     mercado["erros"] = {}
     agora = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
-    ok = 0
-    for item in tickers:
-        tk = item["ticker"].upper()
-        d, erro = coletar_fii(tk, item.get("tipo"))
-        if d:
-            d["atualizadoEm"] = agora
-            anterior = mercado["fiis"].get(tk, {})
-            # mantém valores antigos para campos que não foram lidos desta vez
-            for k, v in anterior.items():
-                if d.get(k) is None and k not in ("atualizadoEm", "fonte"):
-                    d[k] = v
-            mercado["fiis"][tk] = d
-            ok += 1
-            print(f"OK   {tk}: cota {d.get('cotacao')} div {d.get('dividendo')} P/VP {d.get('pvp')}")
-        else:
-            mercado["erros"][tk] = erro
-            print(f"ERRO {tk}: {erro}", file=sys.stderr)
-        time.sleep(2)
-
     try:
         mercado["ranking"] = coletar_ranking()
         mercado["rankingAtualizadoEm"] = agora
@@ -231,6 +243,24 @@ def main():
     except Exception as e:  # noqa: BLE001
         mercado["erros"]["_ranking"] = str(e)[:300]
         print(f"ERRO ranking: {e}", file=sys.stderr)
+    por_ticker = {r["ticker"]: r for r in mercado.get("ranking") or []}
+
+    ok = 0
+    for item in tickers:
+        tk = item["ticker"].upper()
+        pagina, erro = coletar_fii(tk, item.get("tipo"))
+        d = combinar(tk, pagina, por_ticker.get(tk), mercado["fiis"].get(tk))
+        if d.get("cotacao"):
+            d["atualizadoEm"] = agora
+            mercado["fiis"][tk] = d
+            ok += 1
+            print(f"OK   {tk}: cota {d.get('cotacao')} div {d.get('dividendo')} P/VP {d.get('pvp')} DY {d.get('dy12m')}")
+            if erro:
+                print(f"     aviso {tk}: {erro}", file=sys.stderr)
+        else:
+            mercado["erros"][tk] = erro or "sem cotação"
+            print(f"ERRO {tk}: {mercado['erros'][tk]}", file=sys.stderr)
+        time.sleep(2)
 
     mercado["atualizadoEm"] = agora
     with open(ARQ_MERCADO, "w", encoding="utf-8") as f:
