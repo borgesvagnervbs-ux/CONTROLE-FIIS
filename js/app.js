@@ -22,6 +22,7 @@
   let relatorio = ler("fiis.relatorio", null);
   let mercado = { fiis: {}, ranking: [], erros: {} };
   let ocupado = false, ctl = null;
+  let linhaSel = null;
 
   const salvarCarteira = () => { if (!gravar("fiis.carteira", carteira)) setStatus("Não foi possível salvar neste navegador (modo anônimo?)."); };
   const setStatus = (t) => { $("status").textContent = t; };
@@ -38,6 +39,14 @@
       }
       return f;
     });
+  }
+
+  /* Sobra (+, verde) ou falta (−, vermelho) de cotas em relação ao número mágico. */
+  function magicoTd(sobra) {
+    const n = Math.round(sobra);
+    if (!Number.isFinite(n)) return el("td", { class: "num", text: "–" });
+    const txt = n > 0 ? "+" + N0.format(n) : n < 0 ? "\u2212" + N0.format(-n) : "0";
+    return el("td", { class: "num " + (n > 0 ? "pos" : n < 0 ? "neg" : ""), text: txt, title: n >= 0 ? "Cotas a mais que o número mágico" : "Cotas que faltam para o número mágico" });
   }
 
   function numTd(v, fmt, cls) { return el("td", { class: "num " + (cls || ""), text: Number.isFinite(v) ? fmt.format(v) : "–" }); }
@@ -71,19 +80,21 @@
       if (a && a.veredito) an.append(el("span", { class: "chip v-" + a.veredito, text: a.veredito }), " ");
       an.append(el("button", { class: "iconbtn", type: "button", text: a ? "Ver / refazer" : "Analisar", disabled: ocupado, onclick: () => abrirAnalise(f.id) }));
 
-      tb.append(el("tr", {},
+      const tr = el("tr", { class: linhaSel === f.id ? "sel" : null, "data-id": f.id });
+      tb.append(tr);
+      tr.append(
         tk, el("td", { class: "l" }, chip), el("td", {}, qty),
         numTd(c.D, BRL), numTd(c.E, N3), numTd(c.F, BRL), numTd(c.G, PCT), numTd(c.H, PCT),
         numTd(pvp, N2, Number.isFinite(pvp) ? (pvp < 0.95 ? "pos" : pvp > 1.05 ? "neg" : "") : ""),
-        numTd(c.I, BRL), numTd(c.J, N0), numTd(c.K, N0, c.K <= 0 ? "pos" : ""), numTd(c.L, N0), numTd(c.M, N0, c.M <= 0 ? "pos" : ""),
+        numTd(c.I, BRL), numTd(c.J, N0), magicoTd(c.C - c.J), numTd(c.L, N0), numTd(c.M, N0, c.M <= 0 ? "pos" : ""),
         numTd(c.N, BRL), numTd(c.O, BRL), numTd(c.P, BRL), numTd(c.Q, N0), numTd(c.R, BRL), numTd(c.S, BRL),
-        an, el("td", {}, botaoRemover(f.id))));
+        an, el("td", {}, botaoRemover(f.id)));
     }
     const Gavg = tot.Gn ? tot.Gs / tot.Gn : 0;
     const tf = $("tfoot"); tf.textContent = "";
     if (fiis.length) tf.append(el("tr", {}, el("td", { class: "tk", text: "Total" }), el("td", { class: "l", text: fiis.length + " FIIs" }),
       numTd(tot.C, N0), el("td"), el("td"), numTd(tot.F, BRL), numTd(Gavg, PCT), numTd(Gavg * 12, PCT), el("td"), numTd(tot.I, BRL),
-      numTd(tot.J, N0), numTd(tot.J - tot.C, N0), numTd(tot.L, N0), numTd(tot.M, N0), numTd(tot.N, BRL), numTd(tot.O, BRL), numTd(tot.P, BRL),
+      numTd(tot.J, N0), magicoTd(tot.C - tot.J), numTd(tot.L, N0), numTd(tot.M, N0), numTd(tot.N, BRL), numTd(tot.O, BRL), numTd(tot.P, BRL),
       numTd(Math.max(1, +cfg.anos || 1), N0), numTd(tot.R, BRL), numTd(tot.R - tot.F, BRL), el("td"), el("td")));
 
     const k = $("kpis"); k.textContent = "";
@@ -105,6 +116,7 @@
     $("btnRecarregar").disabled = ocupado;
     $("btnAtualizarAgora").disabled = ocupado;
     $("btnParar").hidden = !ocupado;
+    ajustarRolagemTopo();
     $("tickersJson").value = JSON.stringify(carteira.map(f => ({ ticker: f.id, tipo: f.tipo })), null, 1);
   }
 
@@ -119,6 +131,44 @@
     });
     box.append(b); return box;
   }
+
+  /* ---------- rolagem horizontal no topo da tabela e linha destacada ---------- */
+  function ajustarRolagemTopo() {
+    const box = $("tableBox"), top = $("topScroll");
+    $("topScrollInner").style.width = box.scrollWidth + "px";
+    top.hidden = box.scrollWidth <= box.clientWidth + 1;
+  }
+  $("topScroll").addEventListener("scroll", () => { const b = $("tableBox"), t = $("topScroll"); if (Math.abs(b.scrollLeft - t.scrollLeft) > 1) b.scrollLeft = t.scrollLeft; });
+  $("tableBox").addEventListener("scroll", () => { const b = $("tableBox"), t = $("topScroll"); if (Math.abs(b.scrollLeft - t.scrollLeft) > 1) t.scrollLeft = b.scrollLeft; });
+  window.addEventListener("resize", ajustarRolagemTopo);
+  $("tbody").addEventListener("click", (ev) => {
+    if (ev.target.closest("input, button, a, select")) return;
+    const tr = ev.target.closest("tr[data-id]"); if (!tr) return;
+    linhaSel = linhaSel === tr.dataset.id ? null : tr.dataset.id;
+    for (const x of $("tbody").querySelectorAll("tr[data-id]")) x.classList.toggle("sel", x.dataset.id === linhaSel);
+  });
+
+  /* ---------- barra de carregamento e aviso ---------- */
+  let barraTimer = null, toastTimer = null;
+  function barraInicio(duracaoEstimadaMs) {
+    const bar = $("loadbar"), fill = $("loadbarFill"), t0 = Date.now();
+    bar.hidden = false; fill.style.width = "3%";
+    clearInterval(barraTimer);
+    barraTimer = setInterval(() => {
+      const p = Math.min(95, 3 + 92 * (1 - Math.exp(-(Date.now() - t0) / duracaoEstimadaMs)));
+      fill.style.width = p.toFixed(1) + "%"; bar.setAttribute("aria-valuenow", Math.round(p));
+    }, 500);
+  }
+  function barraFim() {
+    clearInterval(barraTimer); barraTimer = null;
+    $("loadbarFill").style.width = "100%";
+    setTimeout(() => { $("loadbar").hidden = true; $("loadbarFill").style.width = "0"; }, 700);
+  }
+  function mostrarAviso(texto, erro) {
+    const t = $("toast"); t.textContent = texto; t.classList.toggle("erro", !!erro); t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 7000);
+  }
+  $("toast").addEventListener("click", () => { $("toast").hidden = true; });
 
   /* ---------- dados de mercado ---------- */
   async function carregarMercado(dadosProntos) {
@@ -285,6 +335,8 @@ Termine com "Fontes: ...".`;
       return;
     }
     ocupado = true; ctl = new AbortController(); render();
+    barraInicio(150000);
+    let sucesso = false;
     try {
       const r = await window.GH.atualizarAgora({ signal: ctl.signal, onStatus: setStatus });
       if (r.conclusao === "success") {
@@ -293,6 +345,8 @@ Termine com "Fontes: ...".`;
         try { j = await window.GH.lerMercado(ctl.signal); } catch { /* usa o arquivo do site */ }
         ocupado = false; ctl = null;
         await carregarMercado(j);
+        sucesso = true;
+        mostrarAviso("Dados atualizados com sucesso às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + ".");
       } else {
         aviso.hidden = false; aviso.textContent = "";
         aviso.append(r.conclusao === "timeout" ? "A atualização está demorando mais que o normal. " : "A atualização falhou no GitHub. ",
@@ -301,7 +355,10 @@ Termine com "Fontes: ...".`;
       }
     } catch (e) {
       setStatus(e && e.name === "AbortError" ? "Acompanhamento interrompido. A atualização continua rodando no GitHub; clique em Recarregar dados daqui a alguns minutos." : window.GH.explicarErro(e));
-    } finally { ocupado = false; ctl = null; render(); }
+    } finally {
+      ocupado = false; ctl = null; barraFim(); render();
+      if (!sucesso) mostrarAviso("A atualização não terminou. Veja a mensagem no topo da página.", true);
+    }
   }
   $("btnAtualizarAgora").addEventListener("click", atualizarAgora);
 

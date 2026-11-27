@@ -25,6 +25,8 @@
     </div>
   </header>
 
+  <div class="loadbar" id="loadbar" hidden role="progressbar" aria-label="Atualizando os dados" aria-valuemin="0" aria-valuemax="100"><span id="loadbarFill"></span></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <div class="note" id="avisoDados" hidden></div>
 
   <section class="kpis" id="kpis" aria-label="Resumo"></section>
@@ -46,7 +48,8 @@
   </section>
 
   <section>
-    <div class="tablebox">
+    <div class="topscroll" id="topScroll" aria-hidden="true"><div id="topScrollInner"></div></div>
+    <div class="tablebox" id="tableBox">
       <table>
         <thead><tr>
           <th class="tk">FII</th><th class="l">Tipo</th><th>Quantidade</th><th>Valor cota</th><th>Dividendo/cota</th><th>Dividendos atuais</th><th>DY mensal</th><th>DY anual</th><th>P/VP</th><th>Patrimônio</th><th>Nº mágico</th><th>Faltam p/ nº mág.</th><th>Meta</th><th>Faltam p/ meta</th><th>Investimento meta</th><th>Meta dividendos</th><th>Meta patrimônio</th><th>Anos</th><th>Investimento mês</th><th>Inv. mês c/ reinvest.</th><th class="l">Análise</th><th></th>
