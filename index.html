@@ -18,6 +18,7 @@
       <div class="status" id="status">Carregando…</div>
     </div>
     <div class="actions">
+      <button id="btnAtualizarAgora" type="button">Atualizar dados agora</button>
       <button id="btnRecarregar" type="button">Recarregar dados</button>
       <button id="btnRelatorio" type="button" class="primary">Gerar relatório geral</button>
       <button id="btnParar" type="button" hidden>Parar</button>
@@ -103,6 +104,19 @@
       <span class="status" id="iaStatus"></span>
     </div>
 
+    <h3 style="margin-top:22px;font-size:1rem">Botão "Atualizar dados agora" (GitHub)</h3>
+    <p class="muted small" style="max-width:75ch">Os dados já se atualizam sozinhos de segunda a sexta às 18:30. Para atualizar em outro horário pelo botão, sem abrir o GitHub, cole aqui um token do GitHub com acesso só a este repositório (passo a passo no README). O token fica salvo apenas neste navegador.</p>
+    <div class="settings-grid">
+      <label for="ghToken">Token do GitHub<input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_..."></label>
+      <label for="ghDono">Dono do repositório<input id="ghDono" autocomplete="off"></label>
+      <label for="ghRepo">Nome do repositório<input id="ghRepo" autocomplete="off"></label>
+    </div>
+    <div class="toolbar">
+      <button type="button" id="btnSalvarGH" class="primary">Salvar</button>
+      <button type="button" id="btnApagarGH">Apagar token</button>
+      <span class="status" id="ghStatus"></span>
+    </div>
+
     <h3 style="margin-top:22px;font-size:1rem">Lista de FIIs para a atualização automática</h3>
     <p class="muted small" style="max-width:75ch">O GitHub Actions só busca os FIIs listados em <code>dados/tickers.json</code>. Quando adicionar ou remover um FII, copie o texto abaixo e cole nesse arquivo no seu repositório.</p>
     <textarea id="tickersJson" readonly aria-label="Conteúdo para dados/tickers.json"></textarea>
@@ -125,6 +139,7 @@
 <script src="js/util.js"></script>
 <script src="js/regras.js"></script>
 <script src="js/ia.js"></script>
+<script src="js/github.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
