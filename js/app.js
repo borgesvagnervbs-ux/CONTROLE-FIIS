@@ -103,6 +103,7 @@
     }
     $("btnRelatorio").disabled = ocupado || !fiis.length;
     $("btnRecarregar").disabled = ocupado;
+    $("btnAtualizarAgora").disabled = ocupado;
     $("btnParar").hidden = !ocupado;
     $("tickersJson").value = JSON.stringify(carteira.map(f => ({ ticker: f.id, tipo: f.tipo })), null, 1);
   }
@@ -120,17 +121,20 @@
   }
 
   /* ---------- dados de mercado ---------- */
-  async function carregarMercado() {
+  async function carregarMercado(dadosProntos) {
     setStatus("Carregando dados de mercado…");
     const aviso = $("avisoDados");
     try {
-      const r = await fetch("dados/mercado.json?t=" + Date.now(), { cache: "no-store" });
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const j = await r.json();
+      let j = dadosProntos && typeof dadosProntos === "object" && dadosProntos.fiis ? dadosProntos : null;
+      if (!j) {
+        const r = await fetch("dados/mercado.json?t=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        j = await r.json();
+      }
       mercado = { fiis: j.fiis || {}, ranking: j.ranking || [], erros: j.erros || {}, atualizadoEm: j.atualizadoEm, rankingAtualizadoEm: j.rankingAtualizadoEm };
       if (!j.atualizadoEm) {
         aviso.hidden = false;
-        aviso.textContent = "Os dados de mercado ainda não foram baixados. No GitHub, abra a aba Actions, escolha \"Atualizar dados dos FIIs\" e clique em \"Run workflow\". Até lá, a tabela usa os valores da planilha.";
+        aviso.textContent = "Os dados de mercado ainda não foram baixados. Clique em \"Atualizar dados agora\" (precisa do token do GitHub em Configurações) ou, no GitHub, abra a aba Actions e clique em \"Run workflow\". Até lá, a tabela usa os valores da planilha.";
         setStatus("Usando os valores da planilha.");
       } else {
         aviso.hidden = true;
@@ -268,7 +272,48 @@ Termine com "Fontes: ...".`;
   $("meta").addEventListener("change", salvarCfg);
   $("anos").addEventListener("change", salvarCfg);
   $("btnRelatorio").addEventListener("click", gerarRelatorio);
-  $("btnRecarregar").addEventListener("click", carregarMercado);
+  $("btnRecarregar").addEventListener("click", () => carregarMercado());
+
+  /* ---------- atualizar agora pelo GitHub Actions ---------- */
+  async function atualizarAgora() {
+    if (ocupado) return;
+    const aviso = $("avisoDados");
+    if (!window.GH.temToken()) {
+      $("config").open = true; $("ghToken").focus();
+      aviso.hidden = false;
+      aviso.textContent = "Para atualizar pelo botão, cole o token do GitHub em Configurações (o passo a passo está no README do repositório).";
+      return;
+    }
+    ocupado = true; ctl = new AbortController(); render();
+    try {
+      const r = await window.GH.atualizarAgora({ signal: ctl.signal, onStatus: setStatus });
+      if (r.conclusao === "success") {
+        setStatus("Atualização concluída. Carregando os dados novos…");
+        let j = null;
+        try { j = await window.GH.lerMercado(ctl.signal); } catch { /* usa o arquivo do site */ }
+        ocupado = false; ctl = null;
+        await carregarMercado(j);
+      } else {
+        aviso.hidden = false; aviso.textContent = "";
+        aviso.append(r.conclusao === "timeout" ? "A atualização está demorando mais que o normal. " : "A atualização falhou no GitHub. ",
+          r.url ? el("a", { href: r.url, target: "_blank", rel: "noopener", text: "Ver o registro da execução" }) : "", ".");
+        setStatus("Os dados não foram atualizados.");
+      }
+    } catch (e) {
+      setStatus(e && e.name === "AbortError" ? "Acompanhamento interrompido. A atualização continua rodando no GitHub; clique em Recarregar dados daqui a alguns minutos." : window.GH.explicarErro(e));
+    } finally { ocupado = false; ctl = null; render(); }
+  }
+  $("btnAtualizarAgora").addEventListener("click", atualizarAgora);
+
+  const gh = window.GH.config();
+  $("ghToken").value = gh.token; $("ghDono").value = gh.dono; $("ghRepo").value = gh.repo;
+  $("btnSalvarGH").addEventListener("click", () => {
+    const token = $("ghToken").value.trim(), dono = $("ghDono").value.trim(), repo = $("ghRepo").value.trim();
+    if (token && !/^(github_pat_|ghp_)/.test(token)) { $("ghStatus").textContent = "O token do GitHub começa com github_pat_ (ou ghp_)."; return; }
+    gravar("fiis.github", { token, dono, repo });
+    $("ghStatus").textContent = token ? "Salvo. Agora é só clicar em \"Atualizar dados agora\"." : "Salvo sem token.";
+  });
+  $("btnApagarGH").addEventListener("click", () => { const c = window.GH.config(); gravar("fiis.github", { dono: c.dono, repo: c.repo }); $("ghToken").value = ""; $("ghStatus").textContent = "Token apagado deste navegador."; });
   $("btnParar").addEventListener("click", () => ctl && ctl.abort());
 
   $("addForm").addEventListener("submit", (ev) => {

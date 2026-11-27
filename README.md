@@ -33,7 +33,7 @@ Por que assim: um site estático não consegue ler o Status Invest direto do nav
 5. **Rode a primeira atualização:** aba Actions → "Atualizar dados dos FIIs e publicar o site" → **Run workflow**. Leva de 2 a 5 minutos.
 6. **Abra o site** no endereço que aparece em Settings → Pages, algo como `https://SEU_USUARIO.github.io/carteira-fiis/`.
 
-Depois disso, os dados se atualizam sozinhos de segunda a sexta às 18:30 (horário de Brasília). Para forçar uma atualização, repita o passo 5.
+Depois disso, os dados se atualizam sozinhos de segunda a sexta às 18:30 (horário de Brasília). Para atualizar em outro horário, use o botão "Atualizar dados agora" (veja abaixo) ou repita o passo 5.
 
 ## Uso do dia a dia
 
@@ -41,6 +41,21 @@ Depois disso, os dados se atualizam sozinhos de segunda a sexta às 18:30 (horá
 - **Adicionar ou remover FII:** use o formulário "Adicionar FII" ou o botão "Remover". Depois copie a lista em **Configurações e backup** e cole no arquivo `dados/tickers.json` do repositório, para o robô passar a atualizar esse FII.
 - **Outro computador ou celular:** em Configurações, "Baixar backup" e depois "Restaurar backup" no outro aparelho.
 - **Metas:** altere "Meta de cotas por FII" e "Período (anos)", como na planilha (E3 e E4).
+
+## Botão "Atualizar dados agora" (sem abrir o GitHub)
+
+Além da atualização automática de segunda a sexta às 18:30, o botão **Atualizar dados agora** no topo do site pede ao GitHub para buscar os dados na hora, mostra o andamento e carrega os valores novos quando termina (de 2 a 5 minutos).
+
+Para o botão funcionar, ele precisa de um token do GitHub. Faça uma vez em cada navegador onde for usar:
+
+1. Abra https://github.com/settings/personal-access-tokens/new (Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token).
+2. **Token name:** `carteira-fiis`. **Expiration:** escolha a validade (por exemplo 1 ano; quando vencer, crie outro).
+3. **Repository access:** marque **Only select repositories** e escolha **CONTROLE-FIIS**.
+4. **Permissions → Repository permissions:** **Actions: Read and write** e **Contents: Read-only**. Não marque mais nada.
+5. Clique em **Generate token** e copie o código (começa com `github_pat_`).
+6. No site, abra **Configurações e backup**, cole em "Token do GitHub" e clique em **Salvar**.
+
+Segurança: o token fica só no seu navegador e vai apenas para api.github.com. Com essas permissões ele só consegue rodar o robô e ler arquivos deste repositório. Nunca coloque o token em um arquivo do repositório, porque ele é público. Se perder o aparelho, apague o token em https://github.com/settings/personal-access-tokens.
 
 ## Análises
 
