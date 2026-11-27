@@ -1,5 +1,5 @@
 {
- "atualizadoEm": "2026-11-27T22:37:33+00:00",
+ "atualizadoEm": "2026-11-27T23:15:41+00:00",
  "fiis": {
   "RZAG11": {
    "cotacao": 7.6,
@@ -12,7 +12,7 @@
    "cotistas": 88382.0,
    "segmento": "Títulos e Val. Mob.",
    "fonte": "https://investidor10.com.br/fiagros/rzag11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "DCRA11": {
    "cotacao": 5.38,
@@ -25,7 +25,7 @@
    "cotistas": 13792.0,
    "segmento": "Outros",
    "fonte": "https://investidor10.com.br/fiagros/dcra11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "AGRX11": {
    "cotacao": 7.5,
@@ -38,7 +38,7 @@
    "cotistas": 19432.0,
    "segmento": "Outros",
    "fonte": "https://investidor10.com.br/fiagros/agrx11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "VGIA11": {
    "cotacao": 8.12,
@@ -51,7 +51,7 @@
    "cotistas": 174120.0,
    "segmento": "Outros",
    "fonte": "https://investidor10.com.br/fiagros/vgia11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "MCRE11": {
    "cotacao": 6.81,
@@ -64,7 +64,7 @@
    "cotistas": 91654.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiis/mcre11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "VGIR11": {
    "cotacao": 8.37,
@@ -77,7 +77,7 @@
    "cotistas": 297979.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiis/vgir11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "FGAA11": {
    "cotacao": 7.85,
@@ -90,7 +90,7 @@
    "cotistas": 49395.0,
    "segmento": "Outros",
    "fonte": "https://investidor10.com.br/fiagros/fgaa11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "XPCA11": {
    "cotacao": 6.67,
@@ -103,7 +103,7 @@
    "cotistas": 91955.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiagros/xpca11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "SNEL11": {
    "cotacao": 7.49,
@@ -116,7 +116,7 @@
    "cotistas": 163294.0,
    "segmento": "Outros",
    "fonte": "https://investidor10.com.br/fiis/snel11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "RURA11": {
    "cotacao": 7.42,
@@ -129,7 +129,7 @@
    "cotistas": 112096.0,
    "segmento": "Títulos e Val. Mob.",
    "fonte": "https://investidor10.com.br/fiagros/rura11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "MANA11": {
    "cotacao": 8.47,
@@ -142,7 +142,7 @@
    "cotistas": 38048.0,
    "segmento": "Outros",
    "fonte": "https://investidor10.com.br/fiis/mana11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "SNAG11": {
    "cotacao": 9.41,
@@ -155,7 +155,7 @@
    "cotistas": 149456.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiagros/snag11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "BTHF11": {
    "cotacao": 8.1,
@@ -168,7 +168,7 @@
    "cotistas": 309322.0,
    "segmento": "Outros",
    "fonte": "https://investidor10.com.br/fiis/bthf11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "RBRX11": {
    "cotacao": 6.52,
@@ -181,7 +181,7 @@
    "cotistas": 126007.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiis/rbrx11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "GGRC11": {
    "cotacao": 8.34,
@@ -194,7 +194,7 @@
    "cotistas": 411225.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiis/ggrc11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "KISU11": {
    "cotacao": 6.2,
@@ -207,7 +207,7 @@
    "cotistas": 97698.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiis/kisu11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "MXRF11": {
    "cotacao": 8.69,
@@ -220,7 +220,7 @@
    "cotistas": 1617111.0,
    "segmento": "Logística",
    "fonte": "https://investidor10.com.br/fiis/mxrf11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "BTCI11": {
    "cotacao": 8.2,
@@ -233,7 +233,7 @@
    "cotistas": 216501.0,
    "segmento": "Outros",
    "fonte": "https://investidor10.com.br/fiis/btci11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "GARE11": {
    "cotacao": 8.17,
@@ -246,7 +246,7 @@
    "cotistas": 572387.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiis/gare11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   },
   "KNSC11": {
    "cotacao": 8.35,
@@ -259,7 +259,7 @@
    "cotistas": 270229.0,
    "segmento": "Multicategoria",
    "fonte": "https://investidor10.com.br/fiis/knsc11/ + https://www.fundamentus.com.br/fii_resultado.php",
-   "atualizadoEm": "2026-11-27T22:37:33+00:00"
+   "atualizadoEm": "2026-11-27T23:15:41+00:00"
   }
  },
  "ranking": [
@@ -7753,5 +7753,5 @@
   }
  ],
  "erros": {},
- "rankingAtualizadoEm": "2026-11-27T22:37:33+00:00"
+ "rankingAtualizadoEm": "2026-11-27T23:15:41+00:00"
 }
