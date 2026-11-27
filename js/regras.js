@@ -66,26 +66,26 @@
     const semDados = pvp === null && !dy;
     const veredito = semDados ? "MANTER" : score >= 2 ? "COMPRAR" : score <= -2 ? "VENDER" : "MANTER";
     const c = window.U.calc(f, cfg);
-    const motivo = semDados ? "Faltam dados de mercado para avaliar. Rode a atualização automática." :
-      veredito === "COMPRAR" ? "Preço e renda atrativos em relação a fundos parecidos." :
-      veredito === "VENDER" ? "Os indicadores estão piores que os de fundos parecidos. Avalie trocar por um fundo mais barato ou mais sólido." :
-      "Indicadores dentro do normal para o tipo do fundo.";
+    const motivo = semDados ? "Ainda faltam dados de mercado para eu fazer uma avaliação segura. Rode a atualização automática e volte a analisar." :
+      veredito === "COMPRAR" ? "Na minha leitura, o preço e a renda estão atrativos em relação a fundos parecidos, o que justifica reforçar a posição com aportes graduais." :
+      veredito === "VENDER" ? "Os indicadores estão piores que os de fundos parecidos. Minha recomendação é reduzir a posição ou trocar por um fundo mais barato ou mais sólido, depois de conferir o último relatório gerencial." :
+      "Os indicadores estão dentro do normal para o tipo do fundo. Recomendo manter e seguir acompanhando os relatórios mensais.";
     const passo = c.M > 0
       ? `Faltam ${N0.format(c.M)} cotas para a meta de ${N0.format(c.L)} (cerca de ${BRL.format(c.N)}), ou ${BRL.format(c.R)} por mês no prazo de ${c.Q} ano(s).`
       : `Você já atingiu a meta de ${N0.format(c.L)} cotas.`;
 
     const linhas = [
       "## Resumo",
-      `${f.id} é um fundo do tipo ${f.tipo}${x.segmento ? ` (segmento: ${x.segmento})` : ""}. Você tem ${N0.format(c.C)} cotas, ${BRL.format(c.I)} na carteira, que rendem cerca de ${BRL.format(c.F)} por mês.`,
+      `Como consultor, minha leitura do ${f.id}: é um fundo do tipo ${f.tipo}${x.segmento ? ` (segmento: ${x.segmento})` : ""}. Você tem ${N0.format(c.C)} cotas, ${BRL.format(c.I)} na carteira, que rendem cerca de ${BRL.format(c.F)} por mês.`,
       info.length ? "## Indicadores" : null,
       ...info.map(s => "- " + s),
       pos.length ? "## Pontos positivos" : null, ...pos.map(s => "- " + s),
-      neg.length ? "## Riscos" : null, ...neg.map(s => "- " + s),
+      neg.length ? "## Riscos e pontos de atenção" : null, ...neg.map(s => "- " + s),
       "## Veredito",
       `Veredito: ${veredito}`,
       `${motivo} ${passo} Número mágico: ${N0.format(c.J)} cotas.`,
       "",
-      `Fontes: ${x.fonte || "valores da planilha"}${f.atualizadoEm ? " (dados de " + window.U.fmtData(f.atualizadoEm) + ")" : ""}. Análise automática por regras; para uma análise com notícias e relatórios, configure a chave da API.`
+      `Fontes: ${x.fonte || "valores da planilha"}${f.atualizadoEm ? " (dados de " + window.U.fmtData(f.atualizadoEm) + ")" : ""}. Análise automática por regras, no papel de consultor especialista em FIIs; para uma análise com notícias e relatórios gerenciais, configure a chave da API.`
     ].filter(l => l !== null);
     return { veredito, score, texto: linhas.join("\n") };
   }
@@ -135,19 +135,20 @@
     const sug = sugestoes(fiis, ranking);
     const linhas = [
       "## Visão geral",
-      `${fiis.length} fundos, patrimônio de ${BRL.format(total)} e renda estimada de ${BRL.format(renda)} por mês.`,
+      `Como seu consultor em fundos imobiliários, revisei a carteira: ${fiis.length} fundos, patrimônio de ${BRL.format(total)} e renda estimada de ${BRL.format(renda)} por mês.`,
       ...alertas.map(s => "- " + s),
-      "## Indicações para os FIIs que você tem",
+      "## Minhas indicações para os FIIs que você tem",
       ...grupo("COMPRAR").map(linhaFii), ...grupo("MANTER").map(linhaFii), ...grupo("VENDER").map(linhaFii),
-      "## Sugestões de FIIs novos",
+      "## Sugestões de FIIs novos para avaliar",
       ...(sug.length ? sug.map(r => `- **${r.ticker}** — ${r.segmento} — cotação ${BRL.format(r.cotacao)}, P/VP ${N2.format(r.pvp)}, DY ${N2.format(r.dy12m)}%, liquidez ${BRL.format(r.liquidez)}/dia${Number.isFinite(r.vacancia) && !r.papel ? ", vacância " + N2.format(r.vacancia) + "%" : ""}`)
         : ["- Sem ranking de mercado ainda. Rode a atualização automática no GitHub (Actions → Atualizar dados dos FIIs → Run workflow)."]),
-      "## Próximos passos",
-      `- Priorize os aportes nos fundos marcados como COMPRAR, começando pelos que estão mais longe da meta de ${cfg.meta} cotas.`,
-      "- Antes de vender um fundo marcado como VENDER, leia o último relatório gerencial: um P/VP baixo às vezes é só um momento ruim do mercado.",
-      "- Use as sugestões para diversificar, principalmente em tipos que hoje têm pouco peso na carteira.",
+      "## Próximos passos recomendados",
+      `- Priorize seus aportes nos fundos marcados como COMPRAR, começando pelos que estão mais longe da meta de ${cfg.meta} cotas.`,
+      "- Antes de vender um fundo marcado como VENDER, leia o último relatório gerencial: um P/VP baixo às vezes é só um momento ruim do mercado, e não um problema do fundo.",
+      "- Use as sugestões para diversificar por tipo, segmento e gestora, principalmente nos tipos que hoje têm pouco peso na carteira.",
+      "- Reavalie a carteira todo mês, quando saem os relatórios gerenciais e os dividendos.",
       "",
-      "Fontes: dados/mercado.json (Status Invest, Investidor10 e Fundamentus). Relatório automático por regras."
+      "Fontes: dados/mercado.json (Status Invest, Investidor10 e Fundamentus). Relatório automático por regras, no papel de consultor especialista em FIIs."
     ];
     return { texto: linhas.join("\n"), analises: an };
   }

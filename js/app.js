@@ -51,16 +51,39 @@
 
   function numTd(v, fmt, cls) { return el("td", { class: "num " + (cls || ""), text: Number.isFinite(v) ? fmt.format(v) : "–" }); }
 
+  const TIPOS_ORDEM = ["FIAGRO", "PAPEL", "TIJOLO", "FOF", "ENERGIA", "HÍBRIDO"];
+  let ordem = ler("fiis.ordem", null);          // {chave, dir: 1 | -1}
+  let filtroTipos = null;                       // null = todos; senão Set de tipos (sempre abre com todos)
+
+  function valorOrdem(r, chave) {
+    if (chave === "tk") return r.f.id;
+    if (chave === "pvp") return r.pvp;
+    if (chave === "sobra") return r.c.C - r.c.J;
+    return r.c[chave];
+  }
+
   function render() {
     const fiis = fiisAtuais();
+    const todas = fiis.map(f => ({ f, c: calc(f, cfg), pvp: Number.isFinite(f.extra.pvp) ? f.extra.pvp : NaN }));
+    let linhas = filtroTipos ? todas.filter(r => filtroTipos.has(r.f.tipo || "OUTRO")) : todas.slice();
+    if (ordem && ordem.chave) {
+      linhas.sort((x, y) => {
+        const a = valorOrdem(x, ordem.chave), b = valorOrdem(y, ordem.chave);
+        if (typeof a === "string") return a.localeCompare(b) * ordem.dir;
+        const na = Number.isFinite(a), nb = Number.isFinite(b);
+        if (!na || !nb) return na === nb ? 0 : na ? -1 : 1;   // sem dado sempre no fim
+        return (a - b) * ordem.dir;
+      });
+    }
+    for (const th of document.querySelectorAll("th[data-sort]")) th.setAttribute("aria-sort", ordem && ordem.chave === th.dataset.sort ? (ordem.dir > 0 ? "ascending" : "descending") : "none");
+
     const tb = $("tbody"); tb.textContent = "";
     if (!fiis.length) tb.append(el("tr", {}, el("td", { class: "empty", colspan: "22", text: "Nenhum FII na carteira. Adicione o primeiro no formulário abaixo." })));
+    else if (!linhas.length) tb.append(el("tr", {}, el("td", { class: "empty", colspan: "22", text: "Nenhum FII dos tipos selecionados." })));
     const tot = { C: 0, F: 0, Gs: 0, Gn: 0, I: 0, J: 0, M: 0, N: 0, O: 0, P: 0, R: 0, L: 0 };
-    const porTipo = {};
-    for (const f of fiis) {
-      const c = calc(f, cfg);
+    for (const { f, c, pvp } of linhas) {
       tot.C += c.C; tot.F += c.F; if (c.D) { tot.Gs += c.G; tot.Gn++; } tot.I += c.I; tot.J += c.J; tot.M += c.M; tot.N += c.N; tot.O += c.O; tot.P += c.P; tot.R += c.R; tot.L += c.L;
-      const t = f.tipo || "OUTRO"; porTipo[t] = porTipo[t] || { n: 0, v: 0 }; porTipo[t].n++; porTipo[t].v += c.I;
+      const t = f.tipo || "OUTRO";
 
       const qty = el("input", { class: "qty", type: "number", min: "0", step: "1", id: "qty-" + f.id, "aria-label": "Quantidade de " + f.id });
       qty.value = c.C;
@@ -74,50 +97,139 @@
       tk.append(el("span", { class: "rowstate" + (erro && !f.atualizadoEm ? " err" : ""), text: f.atualizadoEm ? "dados de " + fmtData(f.atualizadoEm) : erro ? "não atualizado" : "valores da planilha", title: erro || "" }));
 
       const chip = el("span", { class: "chip tipo", text: t }); chip.style.color = corTipo(t);
-      const pvp = Number.isFinite(f.extra.pvp) ? f.extra.pvp : NaN;
       const an = el("td", { class: "l" });
       const a = analises[f.id];
       if (a && a.veredito) an.append(el("span", { class: "chip v-" + a.veredito, text: a.veredito }), " ");
       an.append(el("button", { class: "iconbtn", type: "button", text: a ? "Ver / refazer" : "Analisar", disabled: ocupado, onclick: () => abrirAnalise(f.id) }));
 
+      // cores: P/VP acima de 1 vermelho, abaixo verde; DY mensal a partir de 1% verde (DY anual a partir de 12%)
+      const corPvp = Number.isFinite(pvp) ? (pvp > 1 ? "neg" : pvp < 1 ? "pos" : "") : "";
+      const corDyM = c.D ? (c.G >= 0.01 ? "pos" : "neg") : "";
+      const corDyA = c.D ? (c.H >= 0.12 ? "pos" : "neg") : "";
+
       const tr = el("tr", { class: linhaSel === f.id ? "sel" : null, "data-id": f.id });
       tb.append(tr);
       tr.append(
         tk, el("td", { class: "l" }, chip), el("td", {}, qty),
-        numTd(c.D, BRL), numTd(c.E, N3), numTd(c.F, BRL), numTd(c.G, PCT), numTd(c.H, PCT),
-        numTd(pvp, N2, Number.isFinite(pvp) ? (pvp < 0.95 ? "pos" : pvp > 1.05 ? "neg" : "") : ""),
+        numTd(c.D, BRL), numTd(c.E, N3), numTd(c.F, BRL), numTd(c.G, PCT, corDyM), numTd(c.H, PCT, corDyA),
+        numTd(pvp, N2, corPvp),
         numTd(c.I, BRL), numTd(c.J, N0), magicoTd(c.C - c.J), numTd(c.L, N0), numTd(c.M, N0, c.M <= 0 ? "pos" : ""),
         numTd(c.N, BRL), numTd(c.O, BRL), numTd(c.P, BRL), numTd(c.Q, N0), numTd(c.R, BRL), numTd(c.S, BRL),
         an, el("td", {}, botaoRemover(f.id)));
     }
-    const Gavg = tot.Gn ? tot.Gs / tot.Gn : 0;
+    const GavgF = tot.Gn ? tot.Gs / tot.Gn : 0;
     const tf = $("tfoot"); tf.textContent = "";
-    if (fiis.length) tf.append(el("tr", {}, el("td", { class: "tk", text: "Total" }), el("td", { class: "l", text: fiis.length + " FIIs" }),
-      numTd(tot.C, N0), el("td"), el("td"), numTd(tot.F, BRL), numTd(Gavg, PCT), numTd(Gavg * 12, PCT), el("td"), numTd(tot.I, BRL),
+    if (linhas.length) tf.append(el("tr", {}, el("td", { class: "tk", text: filtroTipos ? "Total filtrado" : "Total" }), el("td", { class: "l", text: linhas.length + " FIIs" }),
+      numTd(tot.C, N0), el("td"), el("td"), numTd(tot.F, BRL), numTd(GavgF, PCT, GavgF ? (GavgF >= 0.01 ? "pos" : "neg") : ""), numTd(GavgF * 12, PCT, GavgF ? (GavgF * 12 >= 0.12 ? "pos" : "neg") : ""), el("td"), numTd(tot.I, BRL),
       numTd(tot.J, N0), magicoTd(tot.C - tot.J), numTd(tot.L, N0), numTd(tot.M, N0), numTd(tot.N, BRL), numTd(tot.O, BRL), numTd(tot.P, BRL),
       numTd(Math.max(1, +cfg.anos || 1), N0), numTd(tot.R, BRL), numTd(tot.R - tot.F, BRL), el("td"), el("td")));
 
-    const k = $("kpis"); k.textContent = "";
-    const kpi = (r, v, s) => k.append(el("div", { class: "kpi" }, el("span", { class: "eyebrow", text: r }), el("span", { class: "v", text: v }), el("span", { class: "s", text: s })));
-    kpi("Patrimônio atual", BRL.format(tot.I), N0.format(tot.C) + " cotas em " + fiis.length + " FIIs");
-    kpi("Dividendos por mês", BRL.format(tot.F), BRL.format(tot.F * 12) + " por ano");
-    kpi("DY médio", PCT.format(Gavg) + " a.m.", PCT.format(Gavg * 12) + " ao ano");
-    kpi("Falta para a meta", BRL.format(tot.N), N0.format(tot.M) + " cotas no total");
-    kpi("Investir por mês", BRL.format(tot.R), BRL.format(Math.max(0, tot.R - tot.F)) + " reinvestindo os dividendos");
-
-    const bar = $("allocBar"), lg = $("allocLegend"); bar.textContent = ""; lg.textContent = "";
-    for (const t of Object.keys(porTipo).sort((a, b) => porTipo[b].v - porTipo[a].v)) {
-      const p = tot.I ? porTipo[t].v / tot.I : 0;
-      const s = el("span", { title: t + " " + PCT.format(p) }); s.style.width = (p * 100) + "%"; s.style.background = corTipo(t); bar.append(s);
-      const i = el("i"); i.style.background = corTipo(t);
-      lg.append(el("span", {}, i, `${t}: ${porTipo[t].n} FII${porTipo[t].n > 1 ? "s" : ""} · ${PCT.format(p)}`));
+    // resumo e gráfico sempre com a carteira inteira
+    const G = { C: 0, F: 0, Gs: 0, Gn: 0, I: 0, M: 0, N: 0, R: 0 };
+    const porTipo = {};
+    for (const { f, c } of todas) {
+      G.C += c.C; G.F += c.F; if (c.D) { G.Gs += c.G; G.Gn++; } G.I += c.I; G.M += c.M; G.N += c.N; G.R += c.R;
+      const t = f.tipo || "OUTRO"; porTipo[t] = porTipo[t] || { n: 0, v: 0 }; porTipo[t].n++; porTipo[t].v += c.I;
     }
+    const Gavg = G.Gn ? G.Gs / G.Gn : 0;
+    montarFiltro(Object.keys(porTipo));
+    const k = $("kpis"); k.textContent = "";
+    const kpi = (r, v, s2) => k.append(el("div", { class: "kpi" }, el("span", { class: "eyebrow", text: r }), el("span", { class: "v", text: v }), el("span", { class: "s", text: s2 })));
+    kpi("Patrimônio atual", BRL.format(G.I), N0.format(G.C) + " cotas em " + fiis.length + " FIIs");
+    kpi("Dividendos por mês", BRL.format(G.F), BRL.format(G.F * 12) + " por ano");
+    kpi("DY médio", PCT.format(Gavg) + " a.m.", PCT.format(Gavg * 12) + " ao ano");
+    kpi("Falta para a meta", BRL.format(G.N), N0.format(G.M) + " cotas no total");
+    kpi("Investir por mês", BRL.format(G.R), BRL.format(Math.max(0, G.R - G.F)) + " reinvestindo os dividendos");
+    desenharPizza(porTipo, G.I);
     $("btnRelatorio").disabled = ocupado || !fiis.length;
     $("btnRecarregar").disabled = ocupado;
     $("btnAtualizarAgora").disabled = ocupado;
     $("btnParar").hidden = !ocupado;
     ajustarRolagemTopo();
     $("tickersJson").value = JSON.stringify(carteira.map(f => ({ ticker: f.id, tipo: f.tipo })), null, 1);
+  }
+
+  /* ---------- gráfico de pizza ---------- */
+  function desenharPizza(porTipo, total) {
+    const svg = $("allocPie"), lg = $("allocLegend"), NS = "http://www.w3.org/2000/svg";
+    svg.textContent = ""; lg.textContent = "";
+    const tipos = Object.keys(porTipo).sort((a, b) => porTipo[b].v - porTipo[a].v);
+    let ang = -Math.PI / 2;
+    const R = 100;
+    for (const t of tipos) {
+      const p = total ? porTipo[t].v / total : 0;
+      const cor = corTipo(t);
+      let forma;
+      if (p >= 0.9999) { forma = document.createElementNS(NS, "circle"); forma.setAttribute("r", R); }
+      else if (p > 0) {
+        const a2 = ang + p * 2 * Math.PI;
+        const x1 = R * Math.cos(ang), y1 = R * Math.sin(ang), x2 = R * Math.cos(a2), y2 = R * Math.sin(a2);
+        forma = document.createElementNS(NS, "path");
+        forma.setAttribute("d", `M0 0 L${x1.toFixed(2)} ${y1.toFixed(2)} A${R} ${R} 0 ${p > 0.5 ? 1 : 0} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`);
+        if (p >= 0.08) {
+          const meio = ang + p * Math.PI, tx = document.createElementNS(NS, "text");
+          tx.setAttribute("x", (R * 0.62 * Math.cos(meio)).toFixed(1)); tx.setAttribute("y", (R * 0.62 * Math.sin(meio) + 4).toFixed(1));
+          tx.setAttribute("text-anchor", "middle"); tx.textContent = Math.round(p * 100) + "%";
+          tx.style.fill = "#fff"; tx.style.paintOrder = "stroke"; tx.style.stroke = "rgba(0,0,0,.35)"; tx.style.strokeWidth = "2px";
+          ang = a2; svg.append(forma); forma.style.fill = cor;
+          const tt = document.createElementNS(NS, "title"); tt.textContent = `${t}: ${PCT.format(p)}`; forma.append(tt);
+          svg.append(tx);
+          lg.append(legendaItem(t, porTipo[t].n, p));
+          continue;
+        }
+        ang = a2;
+      }
+      if (forma) { forma.style.fill = cor; const tt = document.createElementNS(NS, "title"); tt.textContent = `${t}: ${PCT.format(p)}`; forma.append(tt); svg.append(forma); }
+      lg.append(legendaItem(t, porTipo[t].n, p));
+    }
+  }
+  function legendaItem(t, n, p) {
+    const i = el("i"); i.style.background = corTipo(t);
+    return el("span", {}, i, `${t}: ${n} FII${n > 1 ? "s" : ""} · ${PCT.format(p)}`);
+  }
+
+  /* ---------- filtro de tipos (seleção cumulativa) ---------- */
+  let tiposFiltroAtuais = "";
+  function montarFiltro(tiposPresentes) {
+    const tipos = [...TIPOS_ORDEM.filter(t => tiposPresentes.includes(t)), ...tiposPresentes.filter(t => !TIPOS_ORDEM.includes(t)).sort()];
+    if (filtroTipos) { for (const t of [...filtroTipos]) if (!tipos.includes(t)) filtroTipos.delete(t); if (!filtroTipos.size || filtroTipos.size === tipos.length) filtroTipos = null; }
+    $("filtroResumo").textContent = filtroTipos ? [...filtroTipos].join(", ") : "Todos";
+    const chave = tipos.join("|") + "#" + (filtroTipos ? [...filtroTipos].sort().join("|") : "*");
+    if (chave === tiposFiltroAtuais) return;
+    tiposFiltroAtuais = chave;
+    const menu = $("filtroMenu"); menu.textContent = "";
+    const todos = el("input", { type: "checkbox", id: "ft-todos" }); todos.checked = !filtroTipos;
+    todos.addEventListener("change", () => { filtroTipos = null; render(); });
+    menu.append(el("label", { for: "ft-todos" }, todos, el("b", { text: "Todos" })), el("hr"));
+    for (const t of tipos) {
+      const cb = el("input", { type: "checkbox", id: "ft-" + t }); cb.checked = !!(filtroTipos && filtroTipos.has(t));
+      cb.addEventListener("change", () => {
+        if (!filtroTipos) filtroTipos = new Set();
+        if (cb.checked) filtroTipos.add(t); else filtroTipos.delete(t);
+        if (!filtroTipos.size || filtroTipos.size === tipos.length) filtroTipos = null; // nada ou tudo marcado = Todos
+        render();
+      });
+      const dot = el("i"); dot.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:3px;background:${corTipo(t)}`;
+      menu.append(el("label", { for: "ft-" + t }, cb, dot, t));
+    }
+  }
+  $("filtroBtn").addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    const m = $("filtroMenu"); m.hidden = !m.hidden; $("filtroBtn").setAttribute("aria-expanded", String(!m.hidden));
+  });
+  document.addEventListener("click", (ev) => { if (!ev.target.closest("#filtroTipos")) { $("filtroMenu").hidden = true; $("filtroBtn").setAttribute("aria-expanded", "false"); } });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") { $("filtroMenu").hidden = true; $("filtroBtn").setAttribute("aria-expanded", "false"); } });
+
+  /* ---------- ordenação pelas colunas ---------- */
+  for (const th of document.querySelectorAll("th[data-sort]")) {
+    th.querySelector("button").addEventListener("click", () => {
+      const chave = th.dataset.sort;
+      // 1º clique: crescente; 2º: decrescente; 3º: volta à ordem original
+      if (!ordem || ordem.chave !== chave) ordem = { chave, dir: 1 };
+      else if (ordem.dir === 1) ordem = { chave, dir: -1 };
+      else ordem = null;
+      gravar("fiis.ordem", ordem); render();
+    });
   }
 
   function botaoRemover(id) {
@@ -204,11 +316,11 @@
   /* ---------- análise de um FII ---------- */
   function promptFii(f, base) {
     const c = calc(f, cfg), x = f.extra || {};
-    return `Você é um analista de fundos imobiliários (FIIs e Fiagros) brasileiros. Hoje é ${new Date().toLocaleDateString("pt-BR")}. Escreva em português do Brasil uma análise objetiva do ${f.id} para um investidor pessoa física focado em renda, que já tem cotas e quer saber se compra mais, mantém ou vende.
+    return `Você é um consultor especialista em fundos imobiliários (FIIs e Fiagros) brasileiros, com anos de experiência analisando relatórios gerenciais, carteiras de imóveis e de recebíveis, qualidade de crédito (CRIs, indexadores, LTV, garantias), contratos de locação (típicos e atípicos, vencimentos, revisionais), vacância física e financeira, gestão e governança. Hoje é ${new Date().toLocaleDateString("pt-BR")}. Atenda seu cliente, um investidor pessoa física focado em renda que já tem cotas do ${f.id} e quer saber se compra mais, mantém ou vende. Escreva em português do Brasil, falando diretamente com o cliente (use "você"), com a segurança e a clareza de um consultor: explique o porquê de cada ponto, diga o que acompanhar daqui para frente e dê uma recomendação clara.
 
 DADOS DA CARTEIRA: tipo ${f.tipo}; ${c.C} cotas; cotação R$ ${N2.format(c.D)}; último dividendo R$ ${N3.format(c.E)}; DY 12m ${Number.isFinite(x.dy12m) ? N2.format(x.dy12m) + "%" : "?"}; P/VP ${Number.isFinite(x.pvp) ? N2.format(x.pvp) : "?"}; liquidez diária ${Number.isFinite(x.liquidez) ? BRL.format(x.liquidez) : "?"}; vacância ${Number.isFinite(x.vacancia) ? N2.format(x.vacancia) + "%" : "?"}; segmento ${x.segmento || "?"}; número mágico ${N0.format(c.J)} cotas; meta ${c.L} cotas em ${c.Q} ano(s), faltam ${c.M}. Dados de ${f.atualizadoEm ? fmtData(f.atualizadoEm) : "uma planilha (podem estar desatualizados)"}.
 
-ANÁLISE AUTOMÁTICA POR REGRAS (ponto de partida, pode discordar): veredito ${base.veredito}.
+ANÁLISE AUTOMÁTICA POR REGRAS (ponto de partida; como especialista, você pode discordar): veredito ${base.veredito}.
 
 Pesquise na internet dados recentes deste fundo: dividendos dos últimos meses, P/VP, notícias, fatos relevantes e o último relatório gerencial. Não invente números: se não encontrar um dado, diga.
 
@@ -279,7 +391,7 @@ Termine com "Fontes: ..." listando os sites consultados.`;
     ocupado = true; ctl = new AbortController(); render();
     out.textContent = ""; out.append(el("p", { class: "thinking pulse", text: "Pesquisando vários sites. Pode levar alguns minutos…" }));
     const sug = window.Regras.sugestoes(fiis, mercado.ranking, 12);
-    const prompt = `Você é um analista de fundos imobiliários (FIIs e Fiagros) brasileiros. Hoje é ${new Date().toLocaleDateString("pt-BR")}. Escreva em português do Brasil um relatório geral da carteira abaixo, para um investidor pessoa física focado em renda mensal.
+    const prompt = `Você é um consultor especialista em fundos imobiliários (FIIs e Fiagros) brasileiros, com anos de experiência montando e acompanhando carteiras de renda: avalia relatórios gerenciais, qualidade de crédito dos CRIs, contratos de locação, vacância, gestão, diversificação por tipo, segmento e gestora, e o momento de juros. Hoje é ${new Date().toLocaleDateString("pt-BR")}. Prepare para seu cliente, um investidor pessoa física focado em renda mensal, um relatório de consultoria sobre a carteira abaixo. Escreva em português do Brasil, falando diretamente com o cliente (use "você"), com recomendações claras e justificadas, como faria em uma reunião de acompanhamento.
 
 RELATÓRIO AUTOMÁTICO POR REGRAS (dados de mercado e vereditos iniciais; revise com o que encontrar):
 ${base.texto}
