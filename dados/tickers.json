@@ -1,0 +1,82 @@
+[
+ {
+  "ticker": "RZAG11",
+  "tipo": "FIAGRO"
+ },
+ {
+  "ticker": "DCRA11",
+  "tipo": "FIAGRO"
+ },
+ {
+  "ticker": "AGRX11",
+  "tipo": "FIAGRO"
+ },
+ {
+  "ticker": "VGIA11",
+  "tipo": "FIAGRO"
+ },
+ {
+  "ticker": "MCRE11",
+  "tipo": "PAPEL"
+ },
+ {
+  "ticker": "VGIR11",
+  "tipo": "PAPEL"
+ },
+ {
+  "ticker": "FGAA11",
+  "tipo": "FIAGRO"
+ },
+ {
+  "ticker": "XPCA11",
+  "tipo": "FIAGRO"
+ },
+ {
+  "ticker": "SNEL11",
+  "tipo": "ENERGIA"
+ },
+ {
+  "ticker": "RURA11",
+  "tipo": "FIAGRO"
+ },
+ {
+  "ticker": "MANA11",
+  "tipo": "PAPEL"
+ },
+ {
+  "ticker": "SNAG11",
+  "tipo": "FIAGRO"
+ },
+ {
+  "ticker": "BTHF11",
+  "tipo": "FOF"
+ },
+ {
+  "ticker": "RBRX11",
+  "tipo": "FOF"
+ },
+ {
+  "ticker": "GGRC11",
+  "tipo": "TIJOLO"
+ },
+ {
+  "ticker": "KISU11",
+  "tipo": "FOF"
+ },
+ {
+  "ticker": "MXRF11",
+  "tipo": "PAPEL"
+ },
+ {
+  "ticker": "BTCI11",
+  "tipo": "PAPEL"
+ },
+ {
+  "ticker": "GARE11",
+  "tipo": "TIJOLO"
+ },
+ {
+  "ticker": "KNSC11",
+  "tipo": "PAPEL"
+ }
+]

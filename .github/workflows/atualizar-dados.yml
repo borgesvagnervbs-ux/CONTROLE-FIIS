@@ -1,0 +1,67 @@
+name: Atualizar dados dos FIIs e publicar o site
+
+on:
+  schedule:
+    # 21:30 UTC = 18:30 em Brasília, de segunda a sexta (depois do fechamento da B3)
+    - cron: "30 21 * * 1-5"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: atualizar-e-publicar
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    # no push (quando você edita o site) só publica; os dados são buscados no horário ou manualmente
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Buscar cotações, dividendos e ranking
+        run: python scripts/atualizar_dados.py
+
+      - name: Salvar no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dados/mercado.json
+          if git diff --cached --quiet; then
+            echo "Nada mudou."
+          else
+            git commit -m "Atualiza dados dos FIIs ($(date -u +%Y-%m-%d))"
+            git push
+          fi
+
+  publicar:
+    needs: atualizar
+    if: always() && (needs.atualizar.result == 'success' || needs.atualizar.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

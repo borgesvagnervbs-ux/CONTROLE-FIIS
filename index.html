@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carteira de FIIs</title>
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="hoje">Hoje</div>
+      <h1>Carteira de FIIs</h1>
+      <div class="status" id="status">Carregando…</div>
+    </div>
+    <div class="actions">
+      <button id="btnRecarregar" type="button">Recarregar dados</button>
+      <button id="btnRelatorio" type="button" class="primary">Gerar relatório geral</button>
+      <button id="btnParar" type="button" hidden>Parar</button>
+    </div>
+  </header>
+
+  <div class="note" id="avisoDados" hidden></div>
+
+  <section class="kpis" id="kpis" aria-label="Resumo"></section>
+
+  <section class="row2">
+    <div class="panel">
+      <h2>Metas</h2>
+      <p class="muted" style="margin:4px 0 12px">Quantas cotas você quer ter de cada FII e em quantos anos.</p>
+      <div class="settings">
+        <label for="meta">Meta de cotas por FII<input id="meta" type="number" min="1" step="1" class="num"></label>
+        <label for="anos">Período (anos)<input id="anos" type="number" min="1" step="1" class="num"></label>
+      </div>
+    </div>
+    <div class="panel alloc">
+      <h2>Distribuição por tipo</h2>
+      <div class="bar" id="allocBar"></div>
+      <div class="legend" id="allocLegend"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="tablebox">
+      <table>
+        <thead><tr>
+          <th class="tk">FII</th><th class="l">Tipo</th><th>Quantidade</th><th>Valor cota</th><th>Dividendo/cota</th><th>Dividendos atuais</th><th>DY mensal</th><th>DY anual</th><th>P/VP</th><th>Patrimônio</th><th>Nº mágico</th><th>Faltam p/ nº mág.</th><th>Meta</th><th>Faltam p/ meta</th><th>Investimento meta</th><th>Meta dividendos</th><th>Meta patrimônio</th><th>Anos</th><th>Investimento mês</th><th>Inv. mês c/ reinvest.</th><th class="l">Análise</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+        <tfoot id="tfoot"></tfoot>
+      </table>
+    </div>
+    <p class="muted small" style="margin:8px 0 0">Você só digita a quantidade (fica salva neste navegador). Cotação, dividendo e P/VP vêm de <code>dados/mercado.json</code>, atualizado todo dia útil pelo GitHub Actions. Nº mágico = cotas necessárias para os dividendos comprarem 1 cota nova por mês.</p>
+  </section>
+
+  <section class="panel analysis" id="analisePanel" hidden>
+    <div class="analysis-head">
+      <h2 id="analiseTitulo">Análise</h2>
+      <span class="status" id="analiseStatus"></span>
+    </div>
+    <div class="md" id="analiseTexto"></div>
+  </section>
+
+  <section class="panel analysis" id="relPanel">
+    <div class="analysis-head">
+      <h2>Relatório geral</h2>
+      <span class="status" id="relStatus">Nenhum relatório gerado ainda.</span>
+    </div>
+    <div class="md" id="relTexto"><p class="muted">Clique em "Gerar relatório geral" para ver indicações de compra, manutenção ou venda dos seus FIIs e sugestões de FIIs novos.</p></div>
+  </section>
+
+  <section class="panel">
+    <h2>Adicionar FII</h2>
+    <form class="addform" id="addForm" style="margin-top:10px">
+      <label for="novoTicker">Código<input id="novoTicker" placeholder="HGLG11" maxlength="8" style="width:110px;text-transform:uppercase" required></label>
+      <label for="novoTipo">Tipo<select id="novoTipo"><option>TIJOLO</option><option>PAPEL</option><option>FOF</option><option>FIAGRO</option><option>ENERGIA</option><option>HÍBRIDO</option></select></label>
+      <label for="novaQtd">Quantidade<input id="novaQtd" type="number" min="0" step="1" value="0" style="width:100px"></label>
+      <button type="submit" class="primary">Adicionar</button>
+      <span class="status" id="addStatus"></span>
+    </form>
+    <p class="muted small" id="addDica" hidden></p>
+  </section>
+
+  <details class="panel" id="config">
+    <summary>Configurações e backup</summary>
+    <h3 style="margin-top:14px;font-size:1rem">Análise com inteligência artificial (opcional)</h3>
+    <p class="muted small" style="max-width:75ch">Sem chave, as análises usam regras automáticas (P/VP, dividend yield, liquidez e vacância). Com uma chave da API da Anthropic, o Claude pesquisa na internet notícias e relatórios gerenciais de cada FII. A chave fica salva apenas neste navegador e é enviada só para api.anthropic.com. Cada análise tem custo na sua conta da Anthropic.</p>
+    <div class="settings-grid">
+      <label for="apiKey">Chave da API da Anthropic<input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-..."></label>
+      <label for="modelo">Modelo<select id="modelo">
+        <option value="claude-opus-5-5">Claude Opus 5.5 (mais completo)</option>
+        <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (mais barato)</option>
+        <option value="claude-haiku-5-5">Claude Haiku 5.5 (mais rápido e barato)</option>
+      </select></label>
+    </div>
+    <div class="toolbar">
+      <button type="button" id="btnSalvarIA" class="primary">Salvar</button>
+      <button type="button" id="btnApagarIA">Apagar chave</button>
+      <span class="status" id="iaStatus"></span>
+    </div>
+
+    <h3 style="margin-top:22px;font-size:1rem">Lista de FIIs para a atualização automática</h3>
+    <p class="muted small" style="max-width:75ch">O GitHub Actions só busca os FIIs listados em <code>dados/tickers.json</code>. Quando adicionar ou remover um FII, copie o texto abaixo e cole nesse arquivo no seu repositório.</p>
+    <textarea id="tickersJson" readonly aria-label="Conteúdo para dados/tickers.json"></textarea>
+    <div class="toolbar"><button type="button" id="btnCopiarTickers">Copiar</button><span class="status" id="copiarStatus"></span></div>
+
+    <h3 style="margin-top:22px;font-size:1rem">Backup da carteira</h3>
+    <p class="muted small" style="max-width:75ch">Suas quantidades ficam só neste navegador. Baixe um backup para levar a outro computador ou celular.</p>
+    <div class="toolbar">
+      <button type="button" id="btnExportar">Baixar backup</button>
+      <label class="btn" for="arqImportar" style="display:inline-block">Restaurar backup</label>
+      <input type="file" id="arqImportar" accept="application/json,.json" hidden>
+      <span class="confirm" id="resetBox"><button type="button" id="btnReset" class="danger">Voltar à carteira original</button></span>
+      <span class="status" id="backupStatus"></span>
+    </div>
+  </details>
+
+  <p class="disclaimer"><b>Aviso:</b> este sistema é uma ferramenta pessoal de acompanhamento. As análises e indicações são geradas automaticamente a partir de dados públicos e podem conter erros ou estar desatualizadas. Não são recomendação de investimento profissional. Confira as informações e, se precisar, consulte um profissional certificado antes de comprar ou vender.</p>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/regras.js"></script>
+<script src="js/ia.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
