@@ -71,7 +71,7 @@
       veredito === "VENDER" ? "Os indicadores estão piores que os de fundos parecidos. Minha recomendação é reduzir a posição ou trocar por um fundo mais barato ou mais sólido, depois de conferir o último relatório gerencial." :
       "Os indicadores estão dentro do normal para o tipo do fundo. Recomendo manter e seguir acompanhando os relatórios mensais.";
     const passo = c.M > 0
-      ? `Faltam ${N0.format(c.M)} cotas para a meta de ${N0.format(c.L)} (cerca de ${BRL.format(c.N)}), ou ${BRL.format(c.R)} por mês no prazo de ${c.Q} ano(s).`
+      ? `Faltam ${N0.format(c.M)} cotas para a meta de ${N0.format(c.L)} (cerca de ${BRL.format(c.N)}), ou ${BRL.format(c.R)} por mês no prazo de ${c.Q} mês(es).`
       : `Você já atingiu a meta de ${N0.format(c.L)} cotas.`;
 
     const linhas = [

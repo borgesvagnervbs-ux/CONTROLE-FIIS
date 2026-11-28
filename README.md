@@ -40,7 +40,7 @@ Depois disso, os dados se atualizam sozinhos de segunda a sexta às 18:30 (horá
 - **Quantidades:** digite na coluna "Quantidade". Fica salvo no navegador.
 - **Adicionar ou remover FII:** use o formulário "Adicionar FII" ou o botão "Remover". Depois copie a lista em **Configurações e backup** e cole no arquivo `dados/tickers.json` do repositório, para o robô passar a atualizar esse FII.
 - **Outro computador ou celular:** em Configurações, "Baixar backup" e depois "Restaurar backup" no outro aparelho.
-- **Metas:** altere "Meta de cotas por FII" e "Período (anos)", como na planilha (E3 e E4).
+- **Metas:** altere "Meta de cotas por FII" e "Período (meses)". Na planilha o período era em anos (E4); aqui é em meses, e o investimento por mês divide as cotas que faltam pelo número de meses.
 
 ## Botão "Atualizar dados agora" (sem abrir o GitHub)
 
