@@ -42,17 +42,47 @@
     </div>
     <div class="panel alloc">
       <h2>Distribuição por tipo</h2>
-      <div class="bar" id="allocBar"></div>
-      <div class="legend" id="allocLegend"></div>
+      <div class="pie-wrap">
+        <svg id="allocPie" class="pie" viewBox="-110 -110 220 220" role="img" aria-label="Gráfico de pizza da distribuição do patrimônio por tipo"></svg>
+        <div class="legend pie-legend" id="allocLegend"></div>
+      </div>
     </div>
   </section>
 
   <section>
+    <div class="tabletools">
+      <div class="filtro" id="filtroTipos">
+        <button type="button" class="filtro-btn" id="filtroBtn" aria-haspopup="true" aria-expanded="false">Tipos: <b id="filtroResumo">Todos</b><span aria-hidden="true"> ▾</span></button>
+        <div class="filtro-menu" id="filtroMenu" hidden></div>
+      </div>
+      <span class="muted small" id="ordemInfo">Clique no título de uma coluna para ordenar.</span>
+    </div>
     <div class="topscroll" id="topScroll" aria-hidden="true"><div id="topScrollInner"></div></div>
     <div class="tablebox" id="tableBox">
       <table>
         <thead><tr>
-          <th class="tk">FII</th><th class="l">Tipo</th><th>Quantidade</th><th>Valor cota</th><th>Dividendo/cota</th><th>Dividendos atuais</th><th>DY mensal</th><th>DY anual</th><th>P/VP</th><th>Patrimônio</th><th>Nº mágico</th><th>Faltam p/ nº mág.</th><th>Meta</th><th>Faltam p/ meta</th><th>Investimento meta</th><th>Meta dividendos</th><th>Meta patrimônio</th><th>Anos</th><th>Investimento mês</th><th>Inv. mês c/ reinvest.</th><th class="l">Análise</th><th></th>
+          <th class="tk" data-sort="tk" aria-sort="none"><button type="button" class="sortbtn">FII<span class="seta" aria-hidden="true"></span></button></th>
+          <th class="l">Tipo</th>
+          <th data-sort="C" aria-sort="none"><button type="button" class="sortbtn">Quantidade<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="D" aria-sort="none"><button type="button" class="sortbtn">Valor cota<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="E" aria-sort="none"><button type="button" class="sortbtn">Dividendo/cota<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="F" aria-sort="none"><button type="button" class="sortbtn">Dividendos atuais<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="G" aria-sort="none"><button type="button" class="sortbtn">DY mensal<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="H" aria-sort="none"><button type="button" class="sortbtn">DY anual<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="pvp" aria-sort="none"><button type="button" class="sortbtn">P/VP<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="I" aria-sort="none"><button type="button" class="sortbtn">Patrimônio<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="J" aria-sort="none"><button type="button" class="sortbtn">Nº mágico<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="sobra" aria-sort="none"><button type="button" class="sortbtn">Faltam p/ nº mág.<span class="seta" aria-hidden="true"></span></button></th>
+          <th>Meta</th>
+          <th data-sort="M" aria-sort="none"><button type="button" class="sortbtn">Faltam p/ meta<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="N" aria-sort="none"><button type="button" class="sortbtn">Investimento meta<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="O" aria-sort="none"><button type="button" class="sortbtn">Meta dividendos<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="P" aria-sort="none"><button type="button" class="sortbtn">Meta patrimônio<span class="seta" aria-hidden="true"></span></button></th>
+          <th>Anos</th>
+          <th data-sort="R" aria-sort="none"><button type="button" class="sortbtn">Investimento mês<span class="seta" aria-hidden="true"></span></button></th>
+          <th data-sort="S" aria-sort="none"><button type="button" class="sortbtn">Inv. mês c/ reinvest.<span class="seta" aria-hidden="true"></span></button></th>
+          <th class="l">Análise</th>
+          <th></th>
         </tr></thead>
         <tbody id="tbody"></tbody>
         <tfoot id="tfoot"></tfoot>
