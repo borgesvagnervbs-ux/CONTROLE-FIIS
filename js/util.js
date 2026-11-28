@@ -56,12 +56,12 @@
     }
   };
 
-  /* Mesmas fórmulas da planilha (colunas C a S). */
+  /* Mesmas fórmulas da planilha (colunas C a S). Q = período da meta em meses. */
   U.calc = function (f, cfg) {
     const C = +f.qtd || 0, D = +f.cotacao || 0, E = +f.dividendo || 0;
-    const L = +cfg.meta || 0, Q = Math.max(1, +cfg.anos || 1);
+    const L = +cfg.meta || 0, Q = Math.max(1, +cfg.meses || 12);
     const F = E * C, G = D ? E / D : 0, H = G * 12, I = C * D, J = E ? D / E : 0;
-    const K = J - C, M = L - C, N = M * D, O = E * L, P = L * D, R = (M / Q / 12) * D, S = R - F;
+    const K = J - C, M = L - C, N = M * D, O = E * L, P = L * D, R = (M / Q) * D, S = R - F;
     return { C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S };
   };
 

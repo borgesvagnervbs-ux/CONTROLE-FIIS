@@ -17,7 +17,9 @@
   ].map(([id, tipo, qtd, cotacao, dividendo]) => ({ id, tipo, qtd, cotacao, dividendo }));
 
   let carteira = ler("fiis.carteira", null) || CARTEIRA_INICIAL.map(f => ({ ...f }));
-  let cfg = ler("fiis.cfg", { meta: 100, anos: 1 });
+  let cfg = ler("fiis.cfg", { meta: 100, meses: 12 });
+  /* versões antigas guardavam o período em anos */
+  if (!Number.isFinite(+cfg.meses) || +cfg.meses < 1) { cfg = { meta: +cfg.meta || 100, meses: Math.max(1, Math.round((+cfg.anos || 1) * 12)) }; gravar("fiis.cfg", cfg); }
   let analises = ler("fiis.analises", {});
   let relatorio = ler("fiis.relatorio", null);
   let mercado = { fiis: {}, ranking: [], erros: {} };
@@ -122,7 +124,7 @@
     if (linhas.length) tf.append(el("tr", {}, el("td", { class: "tk", text: filtroTipos ? "Total filtrado" : "Total" }), el("td", { class: "l", text: linhas.length + " FIIs" }),
       numTd(tot.C, N0), el("td"), el("td"), numTd(tot.F, BRL), numTd(GavgF, PCT, GavgF ? (GavgF >= 0.01 ? "pos" : "neg") : ""), numTd(GavgF * 12, PCT, GavgF ? (GavgF * 12 >= 0.12 ? "pos" : "neg") : ""), el("td"), numTd(tot.I, BRL),
       numTd(tot.J, N0), magicoTd(tot.C - tot.J), numTd(tot.L, N0), numTd(tot.M, N0), numTd(tot.N, BRL), numTd(tot.O, BRL), numTd(tot.P, BRL),
-      numTd(Math.max(1, +cfg.anos || 1), N0), numTd(tot.R, BRL), numTd(tot.R - tot.F, BRL), el("td"), el("td")));
+      numTd(Math.max(1, +cfg.meses || 12), N0), numTd(tot.R, BRL), numTd(tot.R - tot.F, BRL), el("td"), el("td")));
 
     // resumo e gráfico sempre com a carteira inteira
     const G = { C: 0, F: 0, Gs: 0, Gn: 0, I: 0, M: 0, N: 0, R: 0 };
@@ -318,7 +320,7 @@
     const c = calc(f, cfg), x = f.extra || {};
     return `Você é um consultor especialista em fundos imobiliários (FIIs e Fiagros) brasileiros, com anos de experiência analisando relatórios gerenciais, carteiras de imóveis e de recebíveis, qualidade de crédito (CRIs, indexadores, LTV, garantias), contratos de locação (típicos e atípicos, vencimentos, revisionais), vacância física e financeira, gestão e governança. Hoje é ${new Date().toLocaleDateString("pt-BR")}. Atenda seu cliente, um investidor pessoa física focado em renda que já tem cotas do ${f.id} e quer saber se compra mais, mantém ou vende. Escreva em português do Brasil, falando diretamente com o cliente (use "você"), com a segurança e a clareza de um consultor: explique o porquê de cada ponto, diga o que acompanhar daqui para frente e dê uma recomendação clara.
 
-DADOS DA CARTEIRA: tipo ${f.tipo}; ${c.C} cotas; cotação R$ ${N2.format(c.D)}; último dividendo R$ ${N3.format(c.E)}; DY 12m ${Number.isFinite(x.dy12m) ? N2.format(x.dy12m) + "%" : "?"}; P/VP ${Number.isFinite(x.pvp) ? N2.format(x.pvp) : "?"}; liquidez diária ${Number.isFinite(x.liquidez) ? BRL.format(x.liquidez) : "?"}; vacância ${Number.isFinite(x.vacancia) ? N2.format(x.vacancia) + "%" : "?"}; segmento ${x.segmento || "?"}; número mágico ${N0.format(c.J)} cotas; meta ${c.L} cotas em ${c.Q} ano(s), faltam ${c.M}. Dados de ${f.atualizadoEm ? fmtData(f.atualizadoEm) : "uma planilha (podem estar desatualizados)"}.
+DADOS DA CARTEIRA: tipo ${f.tipo}; ${c.C} cotas; cotação R$ ${N2.format(c.D)}; último dividendo R$ ${N3.format(c.E)}; DY 12m ${Number.isFinite(x.dy12m) ? N2.format(x.dy12m) + "%" : "?"}; P/VP ${Number.isFinite(x.pvp) ? N2.format(x.pvp) : "?"}; liquidez diária ${Number.isFinite(x.liquidez) ? BRL.format(x.liquidez) : "?"}; vacância ${Number.isFinite(x.vacancia) ? N2.format(x.vacancia) + "%" : "?"}; segmento ${x.segmento || "?"}; número mágico ${N0.format(c.J)} cotas; meta ${c.L} cotas em ${c.Q} mês(es), faltam ${c.M}. Dados de ${f.atualizadoEm ? fmtData(f.atualizadoEm) : "uma planilha (podem estar desatualizados)"}.
 
 ANÁLISE AUTOMÁTICA POR REGRAS (ponto de partida; como especialista, você pode discordar): veredito ${base.veredito}.
 
@@ -399,7 +401,7 @@ ${base.texto}
 CANDIDATOS A FIIs NOVOS PELO RANKING DO FUNDAMENTUS (liquidez alta, P/VP entre 0,80 e 1,02):
 ${sug.map(r => `${r.ticker} (${r.segmento}): cotação ${N2.format(r.cotacao)}, P/VP ${N2.format(r.pvp)}, DY ${N2.format(r.dy12m)}%, liquidez ${N0.format(r.liquidez)}`).join("\n") || "nenhum disponível"}
 
-Metas: ${cfg.meta} cotas de cada FII em ${cfg.anos} ano(s).
+Metas: ${cfg.meta} cotas de cada FII em ${cfg.meses} mês(es).
 Pesquise na internet para confirmar os pontos mais importantes (principalmente os fundos marcados como VENDER e os candidatos novos). Não invente números.
 
 Formato (markdown simples, sem tabelas):
@@ -429,10 +431,10 @@ Termine com "Fontes: ...".`;
 
   /* ---------- eventos ---------- */
   $("hoje").textContent = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  $("meta").value = cfg.meta; $("anos").value = cfg.anos;
-  const salvarCfg = () => { cfg = { meta: Math.max(1, Math.round(+$("meta").value || 100)), anos: Math.max(1, Math.round(+$("anos").value || 1)) }; gravar("fiis.cfg", cfg); render(); };
+  $("meta").value = cfg.meta; $("meses").value = cfg.meses;
+  const salvarCfg = () => { cfg = { meta: Math.max(1, Math.round(+$("meta").value || 100)), meses: Math.max(1, Math.round(+$("meses").value || 12)) }; gravar("fiis.cfg", cfg); render(); };
   $("meta").addEventListener("change", salvarCfg);
-  $("anos").addEventListener("change", salvarCfg);
+  $("meses").addEventListener("change", salvarCfg);
   $("btnRelatorio").addEventListener("click", gerarRelatorio);
   $("btnRecarregar").addEventListener("click", () => carregarMercado());
 
@@ -529,11 +531,11 @@ Termine com "Fontes: ...".`;
       const j = JSON.parse(await arq.text());
       if (!Array.isArray(j.carteira)) throw new Error("arquivo sem carteira");
       carteira = j.carteira.filter(f => f && /^[A-Z]{4}1[1-3]$/.test(f.id)).map(f => ({ id: f.id, tipo: String(f.tipo || "OUTRO"), qtd: Math.max(0, +f.qtd || 0), cotacao: +f.cotacao || 0, dividendo: +f.dividendo || 0 }));
-      if (j.cfg) cfg = { meta: +j.cfg.meta || 100, anos: +j.cfg.anos || 1 };
+      if (j.cfg) cfg = { meta: +j.cfg.meta || 100, meses: +j.cfg.meses || Math.max(1, Math.round((+j.cfg.anos || 1) * 12)) };
       analises = j.analises && typeof j.analises === "object" ? j.analises : {};
       relatorio = j.relatorio || null;
       salvarCarteira(); gravar("fiis.cfg", cfg); gravar("fiis.analises", analises); gravar("fiis.relatorio", relatorio);
-      $("meta").value = cfg.meta; $("anos").value = cfg.anos; mostrarRelatorio(); render();
+      $("meta").value = cfg.meta; $("meses").value = cfg.meses; mostrarRelatorio(); render();
       $("backupStatus").textContent = `Backup restaurado: ${carteira.length} FIIs.`;
     } catch (e) { $("backupStatus").textContent = "Arquivo inválido: " + e.message; }
     ev.target.value = "";
