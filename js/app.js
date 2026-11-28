@@ -147,7 +147,6 @@
     $("btnRecarregar").disabled = ocupado;
     $("btnAtualizarAgora").disabled = ocupado;
     $("btnParar").hidden = !ocupado;
-    ajustarRolagemTopo();
     $("tickersJson").value = JSON.stringify(carteira.map(f => ({ ticker: f.id, tipo: f.tipo })), null, 1);
   }
 
@@ -246,15 +245,7 @@
     box.append(b); return box;
   }
 
-  /* ---------- rolagem horizontal no topo da tabela e linha destacada ---------- */
-  function ajustarRolagemTopo() {
-    const box = $("tableBox"), top = $("topScroll");
-    $("topScrollInner").style.width = box.scrollWidth + "px";
-    top.hidden = box.scrollWidth <= box.clientWidth + 1;
-  }
-  $("topScroll").addEventListener("scroll", () => { const b = $("tableBox"), t = $("topScroll"); if (Math.abs(b.scrollLeft - t.scrollLeft) > 1) b.scrollLeft = t.scrollLeft; });
-  $("tableBox").addEventListener("scroll", () => { const b = $("tableBox"), t = $("topScroll"); if (Math.abs(b.scrollLeft - t.scrollLeft) > 1) t.scrollLeft = b.scrollLeft; });
-  window.addEventListener("resize", ajustarRolagemTopo);
+  /* ---------- linha destacada ---------- */
   $("tbody").addEventListener("click", (ev) => {
     if (ev.target.closest("input, button, a, select")) return;
     const tr = ev.target.closest("tr[data-id]"); if (!tr) return;
